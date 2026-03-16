@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="theme-color" content="#0a2a4a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>IntendIt</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ocean-deep:   #061a2e;
+      --ocean-mid:    #0b3d6b;
+      --ocean-bright: #1565c0;
+      --ocean-light:  #1e88e5;
+      --ocean-foam:   #64b5f6;
+      --ocean-glow:   #bbdefb;
+      --surface:      rgba(255,255,255,0.06);
+      --surface2:     rgba(255,255,255,0.10);
+      --surface3:     rgba(255,255,255,0.16);
+      --border:       rgba(255,255,255,0.11);
+      --border-hi:    rgba(100,181,246,0.35);
+      --accent:       #64b5f6;
+      --accent-warm:  #ffca28;
+      --danger:       #ef5350;
+      --success:      #26a69a;
+      --text:         #e3f2fd;
+      --text-dim:     rgba(227,242,253,0.60);
+      --text-muted:   rgba(227,242,253,0.35);
+      --radius:       18px;
+      --radius-sm:    12px;
+      --shadow:       0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: linear-gradient(155deg, var(--ocean-deep) 0%, var(--ocean-mid) 50%, #0d47a1 100%);
+      min-height: 100vh;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 100px;
+      overflow-x: hidden;
+    }
+
+    /* Ambient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, rgba(30,136,229,0.15) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      animation: drift 9s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(100,181,246,0.10) 0%, transparent 70%);
+      bottom: 80px; left: -80px;
+      animation: drift 12s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift {
+      from { transform: translate(0,0); }
+      to   { transform: translate(22px, 28px); }
+    }
+
+    .header, .tabs-wrap, .panel, .toast, .notif-popup, .hint { position: relative; z-index: 1; }
+
+    /* ── Header ─────────────────────────────── */
+    .header {
+      padding: 38px 22px 16px;
+      background: linear-gradient(180deg, rgba(6,26,46,0.92) 0%, transparent 100%);
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 30px;
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--ocean-foam); }
+
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border-hi);
+      color: var(--ocean-foam);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 13px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .badge.warn { color: var(--accent-warm); border-color: rgba(255,202,40,0.4); }
+
+    .bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 5px; }
+    .bar-track  { height: 4px; background: rgba(255,255,255,0.09); border-radius: 4px; overflow: hidden; }
+    .bar-fill   {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ocean-foam), var(--ocean-light));
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .bar-fill.warn { background: linear-gradient(90deg, #ffca28, #ff8f00); }
+    .bar-fill.crit { background: linear-gradient(90deg, #ef5350, #c62828); }
+
+    /* ── Tabs ───────────────────────────────── */
+    .tabs-wrap { padding: 0 22px 16px; }
+    .tabs {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      gap: 4px;
+      backdrop-filter: blur(14px);
+    }
+    .tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 6px;
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.22s ease;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, var(--ocean-bright), var(--ocean-light));
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(21,101,192,0.5);
+    }
+    .tbadge {
+      display: inline-block;
+      background: rgba(255,255,255,0.22);
+      border-radius: 20px;
+      font-size: 10px;
+      padding: 0 6px;
+      margin-left: 4px;
+    }
+
+    /* ── Panels ─────────────────────────────── */
+    .panel { display: none; padding: 0 22px; }
+    .panel.active { display: block; }
+
+    /* ── Form card ──────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .flabel {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      color: var(--ocean-foam);
+      margin-bottom: 9px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      padding: 13px 15px;
+      resize: none;
+      outline: none;
+      line-height: 1.65;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    textarea:focus { border-color: var(--ocean-foam); background: var(--surface3); }
+    textarea::placeholder { color: var(--text-muted); }
+
+    .charcount { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 5px; }
+
+    /* Chips */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 15px;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.17s;
+    }
+    .chip.on {
+      background: rgba(100,181,246,0.14);
+      border-color: var(--ocean-foam);
+      color: var(--ocean-foam);
+    }
+
+    /* Time toggle */
+    .tt {
+      display: flex;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      gap: 3px;
+    }
+    .tt-btn {
+      flex: 1; background: none; border: none;
+      color: var(--text-muted);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      padding: 9px; border-radius: 10px;
+      cursor: pointer; transition: all 0.17s;
+    }
+    .tt-btn.on {
+      background: linear-gradient(135deg, var(--ocean-bright), var(--ocean-light));
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(21,101,192,0.45);
+    }
+
+    .time-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+
+    input[type="number"], input[type="time"] {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px; font-weight: 600;
+      padding: 12px 15px;
+      outline: none;
+      transition: border-color 0.2s;
+      flex: 1;
+    }
+    input[type="time"] { width: 100%; color-scheme: dark; }
+    input:focus { border-color: var(--ocean-foam); }
+    .unit { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
+
+    .quick { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .qbtn {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      padding: 6px 14px; border-radius: 30px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .qbtn:hover, .qbtn:active {
+      border-color: var(--ocean-foam);
+      color: var(--ocean-foam);
+      background: rgba(100,181,246,0.09);
+    }
+
+    /* Preview */
+    .preview {
+      background: linear-gradient(135deg, rgba(100,181,246,0.07), rgba(21,101,192,0.12));
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius-sm);
+      padding: 12px 15px;
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      display: none;
+      animation: fadeUp 0.2s ease;
+    }
+    .preview.on { display: block; }
+    .preview strong { color: var(--ocean-foam); }
+
+    /* Submit */
+    .btn-go {
+      width: 100%;
+      background: linear-gradient(135deg, var(--ocean-bright), var(--ocean-light));
+      color: #fff; border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 15px;
+      letter-spacing: 0.8px; padding: 16px;
+      cursor: pointer; transition: all 0.22s;
+      box-shadow: 0 6px 24px rgba(21,101,192,0.5);
+    }
+    .btn-go:hover  { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(21,101,192,0.6); }
+    .btn-go:active { transform: translateY(0); }
+
+    /* Permission notice */
+    .perm-notice {
+      background: rgba(255,202,40,0.09);
+      border: 1px solid rgba(255,202,40,0.28);
+      border-radius: var(--radius-sm);
+      padding: 12px 15px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 12.5px; color: rgba(255,202,40,0.9);
+      margin-bottom: 14px; cursor: pointer;
+      transition: background 0.2s;
+      line-height: 1.5;
+    }
+    .perm-notice:hover { background: rgba(255,202,40,0.14); }
+    .perm-notice.gone  { display: none; }
+
+    .hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 12px 0 0;
+    }
+
+    /* ── Reminder cards ─────────────────────── */
+    .sec-title {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 6px 0 12px;
+    }
+
+    .rcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 15px 16px;
+      margin-bottom: 11px;
+      display: flex; gap: 12px; align-items: flex-start;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.28s ease;
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .rcard::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+      background: linear-gradient(180deg, var(--ocean-foam), var(--ocean-light));
+      border-radius: 4px 0 0 4px;
+    }
+    .rcard.soon::before    { background: linear-gradient(180deg, #ffca28, #ff8f00); }
+    .rcard.overdue::before { background: linear-gradient(180deg, #ef5350, #b71c1c); }
+    .rcard.archived::before{ background: rgba(255,255,255,0.12); }
+    .rcard.overdue { border-color: rgba(239,83,80,0.28); }
+    .rcard.soon    { border-color: rgba(255,202,40,0.28); }
+
+    .rbody { flex: 1; min-width: 0; }
+
+    .rtext {
+      font-size: 14px; font-weight: 500;
+      line-height: 1.55; color: var(--text);
+      margin-bottom: 7px; word-break: break-word;
+    }
+    .rcard.archived .rtext { color: var(--text-muted); text-decoration: line-through; }
+
+    .rmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+    .rtime { font-size: 12px; font-weight: 600; color: var(--ocean-foam); }
+    .rcard.overdue .rtime { color: var(--danger); }
+    .rcard.soon    .rtime { color: var(--accent-warm); }
+    .rcard.archived .rtime { color: var(--text-muted); }
+
+    .rcat {
+      font-size: 10px; font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface2);
+      padding: 2px 9px; border-radius: 20px;
+    }
+    .rcd { font-size: 11px; color: var(--text-muted); }
+
+    .rbtns { display: flex; gap: 6px; flex-shrink: 0; }
+    .rbtn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      width: 35px; height: 35px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px;
+      transition: all 0.17s;
+    }
+    .rbtn.ok:hover  { background: rgba(38,166,154,0.15); border-color: var(--success); color: var(--success); }
+    .rbtn.rm:hover  { background: rgba(239,83,80,0.15); border-color: var(--danger); color: var(--danger); }
+
+    /* ── Empty ──────────────────────────────── */
+    .empty { text-align: center; padding: 50px 16px; }
+    .empty-icon { font-size: 46px; margin-bottom: 14px; opacity: 0.3; }
+    .empty-msg  { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── Toast ──────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 95px; left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: linear-gradient(135deg, var(--ocean-bright), var(--ocean-light));
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px; font-weight: 600;
+      padding: 11px 22px; border-radius: 30px;
+      z-index: 999; opacity: 0; pointer-events: none;
+      transition: all 0.32s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Notif popup ────────────────────────── */
+    .npopup {
+      position: fixed; top: 16px; left: 50%;
+      transform: translateX(-50%) translateY(-130px);
+      width: calc(100% - 32px); max-width: 440px;
+      background: linear-gradient(135deg, rgba(11,61,107,0.97), rgba(21,101,192,0.97));
+      border: 1px solid rgba(100,181,246,0.5);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      z-index: 1000;
+      transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 14px 45px rgba(0,0,0,0.55);
+      backdrop-filter: blur(22px);
+    }
+    .npopup.on { transform: translateX(-50%) translateY(0); }
+
+    .ntop { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .nbell { font-size: 20px; animation: bell 0.45s ease infinite alternate; }
+    @keyframes bell {
+      from { transform: rotate(-18deg); }
+      to   { transform: rotate(18deg); }
+    }
+    .ntitle { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 1.8px; color: var(--ocean-foam); }
+    .nbody  { font-size: 14px; color: #fff; line-height: 1.55; }
+    .ndismiss {
+      position: absolute; top: 12px; right: 14px;
+      background: none; border: none;
+      color: rgba(255,255,255,0.45); cursor: pointer; font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- Notification popup -->
+  <div class="npopup" id="npopup">
+    <div class="ntop">
+      <span class="nbell">🔔</span>
+      <span class="ntitle">TIME TO ACT</span>
+    </div>
+    <div class="nbody" id="nbody"></div>
+    <button class="ndismiss" onclick="dismissNotif()">✕</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <div class="logo">Intend<span>It</span></div>
+      <div class="badge" id="badge">0 / 50</div>
+    </div>
+    <div class="bar-labels">
+      <span>Daily reminders used</span>
+      <span id="barpct">0%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="barfill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <button class="tab active" id="t-add"     onclick="go('add')">＋ Add</button>
+      <button class="tab"        id="t-active"  onclick="go('active')">Active <span class="tbadge" id="tb-active">0</span></button>
+      <button class="tab"        id="t-archive" onclick="go('archive')">Archive <span class="tbadge" id="tb-archive">0</span></button>
+    </div>
+  </div>
+
+  <!-- ADD -->
+  <div class="panel active" id="p-add">
+
+    <div class="perm-notice" id="permNotice" onclick="askPerm()">
+      <span style="font-size:18px;flex-shrink:0">🔔</span>
+      <span>Enable phone notifications so reminders reach you even when IntendIt is in the background. Tap to allow.</span>
+    </div>
+
+    <div class="card">
+
+      <div>
+        <div class="flabel">What do you intend to do?</div>
+        <textarea id="itext" rows="3" maxlength="200"
+          placeholder="e.g. Call back the client about the proposal…"
+          oninput="onType()"></textarea>
+        <div class="charcount"><span id="cnum">0</span> / 200</div>
+      </div>
+
+      <div>
+        <div class="flabel">Category</div>
+        <div class="chips" id="cats">
+          <button class="chip on" onclick="pickCat(this,'General')">General</button>
+          <button class="chip"    onclick="pickCat(this,'Work')">💼 Work</button>
+          <button class="chip"    onclick="pickCat(this,'Personal')">🏠 Personal</button>
+          <button class="chip"    onclick="pickCat(this,'Urgent')">🔴 Urgent</button>
+          <button class="chip"    onclick="pickCat(this,'Follow-up')">↩ Follow-up</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="flabel">When should I remind you?</div>
+        <div class="tt">
+          <button class="tt-btn on" id="tt-in" onclick="setMode('in')">⏱ In X minutes</button>
+          <button class="tt-btn"    id="tt-at" onclick="setMode('at')">🕐 At exact time</button>
+        </div>
+
+        <div id="row-in" class="time-row">
+          <input type="number" id="mins" min="1" max="1440" placeholder="5" style="max-width:90px" oninput="updatePrev()" />
+          <span class="unit">minutes from now</span>
+        </div>
+
+        <div id="row-at" class="time-row" style="display:none">
+          <input type="time" id="tpick" oninput="updatePrev()" />
+        </div>
+
+        <div class="quick" id="quick">
+          <button class="qbtn" onclick="setQ(5)">5 min</button>
+          <button class="qbtn" onclick="setQ(10)">10 min</button>
+          <button class="qbtn" onclick="setQ(15)">15 min</button>
+          <button class="qbtn" onclick="setQ(30)">30 min</button>
+          <button class="qbtn" onclick="setQ(60)">1 hr</button>
+          <button class="qbtn" onclick="setQ(120)">2 hrs</button>
+        </div>
+      </div>
+
+      <div class="preview" id="prev"></div>
+
+      <button class="btn-go" onclick="addR()">SET REMINDER</button>
+
+    </div>
+
+    <div class="hint">Reminders fire through your phone's default notification system.</div>
+  </div>
+
+  <!-- ACTIVE -->
+  <div class="panel" id="p-active">
+    <div class="sec-title">Active reminders</div>
+    <div id="list-active"></div>
+  </div>
+
+  <!-- ARCHIVE -->
+  <div class="panel" id="p-archive">
+    <div class="sec-title">Completed reminders</div>
+    <div id="list-archive"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  let data     = JSON.parse(localStorage.getItem('intendit3') || '[]');
+  let cat      = 'General';
+  let mode     = 'in';
+  let nqueue   = [];
+  let nbusy    = false;
+
+  // Boot
+  function boot() {
+    defaultTime();
+    checkPerm();
+    registerSW();
+    renderAll();
+    setInterval(tick, 1000);
+  }
+
+  // Register Service Worker for offline + background notifications
+  function registerSW() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(reg => {
+        console.log('SW registered:', reg.scope);
+      }).catch(() => {
+        // Falls back gracefully — app still works in-tab
+      });
+    }
+  }
+
+  function defaultTime() {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + 5);
+    document.getElementById('tpick').value = d.toTimeString().slice(0,5);
+  }
+
+  function save() { localStorage.setItem('intendit3', JSON.stringify(data)); }
+
+  // Permission
+  function checkPerm() {
+    const n = document.getElementById('permNotice');
+    if (!('Notification' in window) || Notification.permission !== 'default') n.classList.add('gone');
+  }
+  function askPerm() {
+    Notification.requestPermission().then(checkPerm);
+  }
+
+  // Tabs
+  function go(t) {
+    ['add','active','archive'].forEach(n => {
+      document.getElementById('t-' + n).classList.toggle('active', n === t);
+      document.getElementById('p-' + n).classList.toggle('active', n === t);
+    });
+  }
+
+  // Form
+  function pickCat(el, c) {
+    cat = c;
+    document.querySelectorAll('#cats .chip').forEach(x => x.classList.remove('on'));
+    el.classList.add('on');
+    updatePrev();
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('tt-in').classList.toggle('on', m === 'in');
+    document.getElementById('tt-at').classList.toggle('on', m === 'at');
+    document.getElementById('row-in').style.display = m === 'in' ? 'flex' : 'none';
+    document.getElementById('row-at').style.display = m === 'at' ? 'flex' : 'none';
+    document.getElementById('quick').style.display  = m === 'in' ? 'flex' : 'none';
+    updatePrev();
+  }
+
+  function setQ(m) { document.getElementById('mins').value = m; updatePrev(); }
+
+  function onType() {
+    document.getElementById('cnum').textContent = document.getElementById('itext').value.length;
+    updatePrev();
+  }
+
+  function updatePrev() {
+    const txt = document.getElementById('itext').value.trim();
+    const box = document.getElementById('prev');
+    if (!txt) { box.classList.remove('on'); return; }
+    let when = '';
+    if (mode === 'in') {
+      const m = parseInt(document.getElementById('mins').value) || '?';
+      when = `in <strong>${m} minute${m === 1 ? '' : 's'}</strong>`;
+    } else {
+      const v = document.getElementById('tpick').value;
+      when = v ? `at <strong>${to12(v)}</strong>` : 'at a chosen time';
+    }
+    box.innerHTML = `🔔 Reminder will fire ${when} — <em>"${esc(txt)}"</em>`;
+    box.classList.add('on');
+  }
+
+  function to12(v) {
+    const [h, m] = v.split(':').map(Number);
+    return ((h % 12) || 12) + ':' + String(m).padStart(2,'0') + (h >= 12 ? ' PM' : ' AM');
+  }
+
+  // Add
+  function addR() {
+    const txt = document.getElementById('itext').value.trim();
+    if (!txt) { toast('Please describe what you intend to do.'); return; }
+
+    const today = new Date().toDateString();
+    const todayN = data.filter(r => new Date(r.created).toDateString() === today).length;
+    if (todayN >= 50) { toast('Daily limit of 50 reminders reached.'); return; }
+
+    let at;
+    if (mode === 'in') {
+      const m = parseInt(document.getElementById('mins').value);
+      if (!m || m < 1 || m > 1440) { toast('Please enter a time between 1 and 1440 minutes.'); return; }
+      at = Date.now() + m * 60000;
+    } else {
+      const v = document.getElementById('tpick').value;
+      if (!v) { toast('Please select a time.'); return; }
+      const [h, mn] = v.split(':').map(Number);
+      const d = new Date(); d.setHours(h, mn, 0, 0);
+      if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+      at = d.getTime();
+    }
+
+    const newR = { id: Date.now(), txt, cat, at, created: Date.now(), done: false, notified: false };
+    data.push(newR);
+    save(); renderAll();
+    // Schedule via SW for background delivery
+    setTimeout(() => scheduleViaSW(newR), 500);
+
+    document.getElementById('itext').value = '';
+    document.getElementById('cnum').textContent = '0';
+    document.getElementById('mins').value = '';
+    document.getElementById('prev').classList.remove('on');
+    defaultTime();
+    toast('Reminder set ✓');
+    go('active');
+  }
+
+  function doneR(id) {
+    const r = data.find(x => x.id === id);
+    if (r) { r.done = true; save(); renderAll(); toast('Marked done ✓'); }
+  }
+  function delR(id) {
+    data = data.filter(x => x.id !== id);
+    save(); renderAll(); toast('Deleted');
+  }
+
+  // Render
+  function renderAll() {
+    const today = new Date().toDateString();
+    const n = data.filter(r => new Date(r.created).toDateString() === today).length;
+    const pct = Math.round((n / 50) * 100);
+
+    document.getElementById('badge').textContent = n + ' / 50';
+    document.getElementById('badge').className = 'badge' + (n >= 45 ? ' warn' : '');
+    document.getElementById('barpct').textContent = pct + '%';
+    const bf = document.getElementById('barfill');
+    bf.style.width = pct + '%';
+    bf.className = 'bar-fill' + (pct >= 90 ? ' crit' : pct >= 70 ? ' warn' : '');
+
+    const active  = data.filter(r => !r.done).sort((a,b) => a.at - b.at);
+    const archive = data.filter(r =>  r.done).sort((a,b) => b.at - a.at);
+
+    document.getElementById('tb-active').textContent  = active.length;
+    document.getElementById('tb-archive').textContent = archive.length;
+
+    renderList('list-active',  active,  false);
+    renderList('list-archive', archive, true);
+  }
+
+  function renderList(id, list, arch) {
+    const el = document.getElementById(id);
+    if (!list.length) {
+      el.innerHTML = `<div class="empty">
+        <div class="empty-icon">${arch ? '📦' : '⏳'}</div>
+        <div class="empty-msg">${arch
+          ? 'No archived reminders yet.<br>Completed tasks will appear here.'
+          : 'No active reminders.<br>Use the Add tab to set one.'}</div>
+      </div>`;
+      return;
+    }
+    const now = Date.now();
+    el.innerHTML = list.map(r => {
+      const diff = r.at - now;
+      const cls  = arch ? 'archived' : diff < 0 ? 'overdue' : diff < 300000 ? 'soon' : '';
+      const cd   = arch ? '' : ' &middot; ' + fmtCd(diff);
+      return `<div class="rcard ${cls}" id="rc-${r.id}">
+        <div class="rbody">
+          <div class="rtext">${esc(r.txt)}</div>
+          <div class="rmeta">
+            <span class="rtime">${fmtT(r.at)}</span>
+            <span class="rcat">${r.cat}</span>
+            <span class="rcd" id="cd-${r.id}">${cd}</span>
+          </div>
+        </div>
+        <div class="rbtns">
+          ${!arch ? `<button class="rbtn ok" title="Mark done" onclick="doneR(${r.id})">✓</button>` : ''}
+          <button class="rbtn rm" title="Delete" onclick="delR(${r.id})">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function fmtT(ts)   { return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+  function fmtCd(d)   {
+    if (d < 0) return 'overdue';
+    const s = Math.floor(d / 1000);
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sc = s%60;
+    if (h) return `in ${h}h ${m}m`;
+    if (m) return `in ${m}m ${sc}s`;
+    return `in ${sc}s`;
+  }
+  function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Tick
+  function tick() {
+    const now = Date.now();
+    data.filter(r => !r.done).forEach(r => {
+      const el = document.getElementById('cd-' + r.id);
+      if (el) el.textContent = ' · ' + fmtCd(r.at - now);
+      const card = document.getElementById('rc-' + r.id);
+      if (card) {
+        const diff = r.at - now;
+        card.className = 'rcard ' + (diff < 0 ? 'overdue' : diff < 300000 ? 'soon' : '');
+      }
+      if (r.at <= now && !r.notified) {
+        r.notified = true; save(); fire(r);
+      }
+    });
+  }
+
+  function fire(r) {
+    // In-app popup
+    nqueue.push(r);
+    if (!nbusy) nextNotif();
+    // System notification — via SW if available, else direct
+    if ('Notification' in window && Notification.permission === 'granted') {
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SCHEDULE_NOTIF',
+          title: 'IntendIt — ' + r.cat,
+          body: r.txt,
+          delay: 0
+        });
+      } else {
+        new Notification('IntendIt — ' + r.cat, { body: r.txt, icon: 'icon-192.png' });
+      }
+    }
+  }
+
+  // Pre-schedule future reminders via SW so they fire even if tab is backgrounded
+  function scheduleViaSW(r) {
+    const delay = r.at - Date.now();
+    if (delay > 0 && navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SCHEDULE_NOTIF',
+        title: 'IntendIt — ' + r.cat,
+        body: r.txt,
+        delay
+      });
+    }
+  }
+
+  function nextNotif() {
+    if (!nqueue.length) { nbusy = false; return; }
+    nbusy = true;
+    const r = nqueue.shift();
+    document.getElementById('nbody').textContent = r.txt;
+    document.getElementById('npopup').classList.add('on');
+    setTimeout(() => {
+      document.getElementById('npopup').classList.remove('on');
+      setTimeout(nextNotif, 450);
+    }, 7000);
+  }
+  function dismissNotif() {
+    document.getElementById('npopup').classList.remove('on');
+    setTimeout(nextNotif, 450);
+  }
+
+  // Toast
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    setTimeout(() => t.classList.remove('on'), 2600);
+  }
+
+  boot();
+  </script>
+</body>
+</html>
